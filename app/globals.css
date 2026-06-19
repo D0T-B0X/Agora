@@ -227,7 +227,7 @@ a {
 .app-card h1 {
   max-width: 760px;
   margin: 0;
-  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-size: clamp(2.35rem, 5vw, 4.4rem);
   line-height: 1;
   letter-spacing: -0.06em;
 }
@@ -289,10 +289,22 @@ a {
   padding: 12px 14px;
   border-left: 4px solid var(--accent);
   background: #fffef8;
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .form-message.error {
   border-left-color: #d33f2f;
+}
+
+.form-message code {
+  padding: 2px 5px;
+  background: #f1efe4;
+  border: 1px solid var(--line);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
 }
 
 .application-list {

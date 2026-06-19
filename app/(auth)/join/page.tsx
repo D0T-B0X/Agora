@@ -34,8 +34,9 @@ export default async function JoinPage() {
           </form>
         ) : (
           <div className="form-message error">
-            Google sign-in is not configured yet. Add `AUTH_GOOGLE_ID` and
-            `AUTH_GOOGLE_SECRET` to `.env.local`, then restart the dev server.
+            Google sign-in is not configured yet. Add <code>AUTH_GOOGLE_ID</code> and{" "}
+            <code>AUTH_GOOGLE_SECRET</code> to <code>.env.local</code>, then restart
+            the dev server.
           </div>
         )}
       </section>
