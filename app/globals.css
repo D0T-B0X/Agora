@@ -84,9 +84,9 @@ a {
 .hero h1 {
   max-width: 860px;
   margin: 0;
-  font-size: clamp(3rem, 8vw, 6.8rem);
-  line-height: 0.94;
-  letter-spacing: -0.075em;
+  font-size: clamp(2.75rem, 6vw, 5.4rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
 }
 
 .hero-copy {

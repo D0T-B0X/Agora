@@ -19,7 +19,6 @@ export default function Home() {
       </header>
 
       <section id="top" className="hero">
-        <p className="eyebrow">Mentorship collective</p>
         <h1>A technical community built on mentorship and real work.</h1>
         <p className="hero-copy">
           ShardUp brings alumni and students together to learn, build, and grow
