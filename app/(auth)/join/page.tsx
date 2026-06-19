@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth, signIn } from "../../../auth";
+import { auth, isGoogleOAuthConfigured, signIn } from "../../../auth";
 
 export default async function JoinPage() {
   const session = await auth();
@@ -21,16 +21,23 @@ export default async function JoinPage() {
           Signing in creates your ShardUp identity. Full member access is granted
           after your application is reviewed.
         </p>
-        <form
-          action={async () => {
-            "use server";
-            await signIn("google", { redirectTo: "/dashboard" });
-          }}
-        >
-          <button className="button" type="submit">
-            Continue with Google
-          </button>
-        </form>
+        {isGoogleOAuthConfigured ? (
+          <form
+            action={async () => {
+              "use server";
+              await signIn("google", { redirectTo: "/dashboard" });
+            }}
+          >
+            <button className="button" type="submit">
+              Continue with Google
+            </button>
+          </form>
+        ) : (
+          <div className="form-message error">
+            Google sign-in is not configured yet. Add `AUTH_GOOGLE_ID` and
+            `AUTH_GOOGLE_SECRET` to `.env.local`, then restart the dev server.
+          </div>
+        )}
       </section>
     </main>
   );

@@ -4,19 +4,29 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./lib/prisma";
 import { ensureRegistrationRecords, syncUserAccess } from "./lib/access";
 
+const isDevelopment = process.env.NODE_ENV !== "production";
+export const isGoogleOAuthConfigured = Boolean(
+  process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
+);
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  secret:
+    process.env.AUTH_SECRET ??
+    (isDevelopment ? "shardup-development-only-auth-secret" : undefined),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/join",
   },
-  providers: [
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID ?? "",
-      clientSecret: process.env.AUTH_GOOGLE_SECRET ?? "",
-      allowDangerousEmailAccountLinking: false,
-    }),
-  ],
+  providers: isGoogleOAuthConfigured
+    ? [
+        Google({
+          clientId: process.env.AUTH_GOOGLE_ID ?? "",
+          clientSecret: process.env.AUTH_GOOGLE_SECRET ?? "",
+          allowDangerousEmailAccountLinking: false,
+        }),
+      ]
+    : [],
   callbacks: {
     async signIn({ account, profile }) {
       if (account?.provider !== "google") {
