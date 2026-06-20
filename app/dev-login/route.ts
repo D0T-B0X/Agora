@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { redirect } from "next/navigation";
 import {
   isLocalDevAuthEnabled,
-  localDevAuthRole,
+  localDevProviderId,
   signIn,
+  type LocalDevRole,
 } from "../../auth";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +41,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  await signIn("local-dev", {
-    redirectTo: localDevAuthRole === "admin" ? "/admin/applications" : "/apply",
+  const role: LocalDevRole =
+    new URL(request.url).searchParams.get("role") === "admin" ? "admin" : "member";
+
+  await signIn(localDevProviderId(role), {
+    redirectTo: role === "admin" ? "/admin/applications" : "/apply",
   });
 }

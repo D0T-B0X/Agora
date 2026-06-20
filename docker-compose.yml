@@ -1,0 +1,29 @@
+# Local Postgres for ShardUp development.
+#
+#   docker compose up -d        # start the database
+#   docker compose down         # stop it (data is preserved in the named volume)
+#   docker compose down -v      # stop it and wipe all data
+#
+# The connection string for this instance is in .env.example / .env.local:
+#   postgresql://postgres:postgres@localhost:5432/shardup?schema=public
+services:
+  db:
+    image: postgres:16
+    container_name: shardup-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shardup
+    ports:
+      - "5432:5432"
+    volumes:
+      - shardup-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d shardup"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  shardup-pgdata:

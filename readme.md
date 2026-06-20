@@ -133,24 +133,46 @@ Note: High development effort and not required for MVP validation.
 
 The app uses Auth.js with Google OAuth, Prisma, and Postgres for the authentication and registration foundation.
 
-Required environment variables are listed in `.env.example`.
+**1. Start a local Postgres** (runs in Docker — requires Docker Desktop):
 
-For local development, Google credentials are optional. Set `LOCAL_DEV_AUTH_ENABLED=true` in `.env.local` to show a development-only local sign-in option. Use `LOCAL_DEV_AUTH_ROLE=admin` to test application review, or `LOCAL_DEV_AUTH_ROLE=member` to test the applicant flow without sharing Google OAuth secrets.
+```bash
+docker compose up -d        # start Postgres on localhost:5432
+docker compose down         # stop it (data is preserved)
+docker compose down -v      # stop it and wipe all data
+```
 
-Google OAuth callback URLs:
+**2. Configure environment variables.** Copy `.env.example` and fill it in:
+
+- `DATABASE_URL` goes in `.env` (the Prisma CLI only reads `.env`).
+- Everything else (`AUTH_*`, `ADMIN_EMAILS`, `LOCAL_DEV_AUTH_ENABLED`) goes in `.env.local`.
+
+**3. Create the schema and start the app:**
+
+```bash
+npm run prisma:migrate      # apply migrations to the local database
+npm run dev
+```
+
+### Sign-in
+
+Google OAuth is the real sign-in method. Callback URLs:
 
 - Local: `http://localhost:3000/api/auth/callback/google`
 - Production: `https://YOUR_DOMAIN/api/auth/callback/google`
 
-Useful commands:
+For local development, Google credentials are optional. Set `LOCAL_DEV_AUTH_ENABLED=true` in `.env.local` and the `/join` page shows two development-only sign-ins:
+
+- **Continue as applicant (dev)** — signs in as `applicant@shardup.local` to test the application flow. This is a throwaway test account: it is reset to `PENDING` with a fresh blank application on every login, so you can re-run the flow repeatedly.
+- **Continue as admin (dev)** — signs in as `admin@shardup.local` to test application review. Make sure `admin@shardup.local` is in `ADMIN_EMAILS`.
+
+### Useful commands
 
 - `npm run prisma:generate`
-- `DATABASE_URL="postgresql://postgres:postgres@localhost:5432/shardup?schema=public" npm run prisma:migrate`
+- `npm run prisma:migrate`
 - `npm run prisma:seed`
+- `npm run prisma:studio`
 - `npm run dev`
 - `npm run build`
-
-Registration is application-first. Google sign-in creates the user identity, but member access remains gated until the application is approved by an admin.
 
 Events are published manually for now. Seed sample events with `npm run prisma:seed`, or manage rows directly in Prisma Studio. Add an optional `imageUrl` to show an event image on the list and detail pages. RSVP is available only to active members; signed-out users can view events but must sign in before RSVPing.
 

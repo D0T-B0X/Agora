@@ -7,20 +7,62 @@ import { prisma } from "./lib/prisma";
 import { ensureRegistrationRecords, syncUserAccess } from "./lib/access";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
-const configuredLocalDevRole = process.env.LOCAL_DEV_AUTH_ROLE?.trim().toLowerCase();
+
 export const isLocalDevAuthEnabled =
   process.env.NODE_ENV === "development" && process.env.LOCAL_DEV_AUTH_ENABLED === "true";
-export const localDevAuthRole =
-  configuredLocalDevRole === "admin" ? "admin" : "member";
-export const localDevAuthEmail =
-  process.env.LOCAL_DEV_AUTH_EMAIL ??
-  (localDevAuthRole === "admin" ? "admin@shardup.local" : "applicant@shardup.local");
-export const localDevAuthName =
-  process.env.LOCAL_DEV_AUTH_NAME ??
-  (localDevAuthRole === "admin" ? "Local Admin" : "Local Applicant");
+
 export const isGoogleOAuthConfigured = Boolean(
   process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
 );
+
+export type LocalDevRole = "admin" | "member";
+
+const LOCAL_DEV_IDENTITIES: Record<LocalDevRole, { id: string; email: string; name: string }> = {
+  admin: { id: "local-dev-admin", email: "admin@shardup.local", name: "Local Admin" },
+  member: { id: "local-dev-member", email: "applicant@shardup.local", name: "Local Applicant" },
+};
+
+export function localDevProviderId(role: LocalDevRole) {
+  return LOCAL_DEV_IDENTITIES[role].id;
+}
+
+// Dev-only logins (admin + applicant) for local testing without Google. Off in production.
+function makeLocalDevProvider(role: LocalDevRole) {
+  const isAdmin = role === "admin";
+  const { id, email, name } = LOCAL_DEV_IDENTITIES[role];
+
+  return Credentials({
+    id,
+    name,
+    credentials: {},
+    async authorize() {
+      const user = await prisma.user.upsert({
+        where: { email },
+        update: {
+          name,
+          role: isAdmin ? Role.ADMIN : Role.MEMBER,
+          // The dev applicant is a test account — reset to PENDING on every login.
+          status: isAdmin ? UserStatus.ACTIVE : UserStatus.PENDING,
+        },
+        create: {
+          email,
+          name,
+          role: isAdmin ? Role.ADMIN : Role.MEMBER,
+          status: isAdmin ? UserStatus.ACTIVE : UserStatus.PENDING,
+        },
+      });
+
+      // Clear the old application so each login starts a fresh draft. Admins don't get one.
+      if (!isAdmin) {
+        await prisma.application.deleteMany({ where: { userId: user.id } });
+      }
+
+      await ensureRegistrationRecords(user.id, user.email);
+
+      return { id: user.id, email: user.email, name: user.name, image: user.image };
+    },
+  });
+}
 
 const providers = [
   ...(isGoogleOAuthConfigured
@@ -41,42 +83,7 @@ const providers = [
       ]
     : []),
   ...(isLocalDevAuthEnabled
-    ? [
-        Credentials({
-          id: "local-dev",
-          name: "Local Development",
-          credentials: {},
-          async authorize() {
-            const isAdmin = localDevAuthRole === "admin";
-            const email = localDevAuthEmail.trim().toLowerCase();
-            const name = localDevAuthName.trim();
-
-            const user = await prisma.user.upsert({
-              where: { email },
-              update: {
-                name,
-                role: isAdmin ? Role.ADMIN : Role.MEMBER,
-                status: isAdmin ? UserStatus.ACTIVE : UserStatus.PENDING,
-              },
-              create: {
-                email,
-                name,
-                role: isAdmin ? Role.ADMIN : Role.MEMBER,
-                status: isAdmin ? UserStatus.ACTIVE : UserStatus.PENDING,
-              },
-            });
-
-            await ensureRegistrationRecords(user.id, user.email);
-
-            return {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              image: user.image,
-            };
-          },
-        }),
-      ]
+    ? [makeLocalDevProvider("member"), makeLocalDevProvider("admin")]
     : []),
 ];
 
@@ -94,7 +101,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers,
   callbacks: {
     async signIn({ account, profile }) {
-      if (isLocalDevAuthEnabled && account?.provider === "local-dev") {
+      if (isLocalDevAuthEnabled && account?.provider?.startsWith("local-dev")) {
         return true;
       }
 

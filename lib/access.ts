@@ -13,11 +13,6 @@ function getAdminEmails() {
 export async function syncUserAccess(userId: string, email?: string | null) {
   const adminEmails = getAdminEmails();
   const normalizedEmail = email?.trim().toLowerCase();
-  const localDevEmail = process.env.LOCAL_DEV_AUTH_EMAIL?.trim().toLowerCase();
-  const isConfiguredLocalDevUser =
-    process.env.NODE_ENV === "development" &&
-    process.env.LOCAL_DEV_AUTH_ENABLED === "true" &&
-    Boolean(normalizedEmail && localDevEmail && normalizedEmail === localDevEmail);
   const shouldBeAdmin = Boolean(normalizedEmail && adminEmails.has(normalizedEmail));
 
   const user = await prisma.user.findUnique({
@@ -37,7 +32,7 @@ export async function syncUserAccess(userId: string, email?: string | null) {
     });
   }
 
-  if (!isConfiguredLocalDevUser && adminEmails.size > 0 && user.role === Role.ADMIN && !shouldBeAdmin) {
+  if (adminEmails.size > 0 && user.role === Role.ADMIN && !shouldBeAdmin) {
     return prisma.user.update({
       where: { id: userId },
       data: { role: Role.MEMBER },
@@ -50,6 +45,11 @@ export async function syncUserAccess(userId: string, email?: string | null) {
 
 export async function ensureRegistrationRecords(userId: string, email?: string | null) {
   const access = await syncUserAccess(userId, email);
+
+  // User no longer exists but the session is still alive → access is null. Bail out, else FK violation.
+  if (!access) {
+    return;
+  }
 
   await prisma.profile.upsert({
     where: { userId },
