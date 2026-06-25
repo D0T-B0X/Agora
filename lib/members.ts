@@ -26,7 +26,6 @@ export const profileSchema = z.object({
 
 export const badgeSchema = z.object({
   name: z.string().trim().min(2).max(80),
-  emoji: z.string().trim().min(1).max(16),
   description: z.string().trim().max(240).optional(),
 });
 

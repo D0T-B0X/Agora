@@ -29,7 +29,7 @@ export default async function BadgeGroupPage({ params }: Readonly<{ params: { id
         {badge.imageUrl ? (
           <img className="badge-group-image" src={badge.imageUrl} alt="" />
         ) : (
-          <span className="badge-group-image badge-image-fallback">{badge.emoji}</span>
+          <span className="badge-group-image badge-image-fallback">Badge</span>
         )}
         <div>
           <p className="section-label">Recognition</p>

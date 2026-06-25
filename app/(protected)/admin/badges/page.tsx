@@ -2,7 +2,8 @@
 
 import { requireAdmin } from "../../../../lib/guards";
 import { prisma } from "../../../../lib/prisma";
-import { createBadge, deleteBadge } from "./actions";
+import CreateBadgeModal from "../../../create-badge-modal";
+import { deleteBadge } from "./actions";
 
 export default async function AdminBadgesPage({
   searchParams,
@@ -23,23 +24,10 @@ export default async function AdminBadgesPage({
           <div className="form-message error">Check the badge fields.</div>
         ) : null}
 
-        <form action={createBadge} className="stacked-form compact-form">
-          <label htmlFor="emoji">Emoji</label>
-          <input id="emoji" name="emoji" placeholder="🏆" required />
-
-          <label htmlFor="name">Badge name</label>
-          <input id="name" name="name" placeholder="Hackathon 2026 Winner" required />
-
-          <label htmlFor="description">Description</label>
-          <textarea id="description" name="description" rows={3} />
-
-          <label htmlFor="image">Badge image</label>
-          <input id="image" name="image" type="file" accept="image/png,image/jpeg,image/webp" />
-
-          <button className="button" type="submit">
-            Create badge group
-          </button>
-        </form>
+        <a className="button" href="#create-badge">
+          Create badge
+        </a>
+        <CreateBadgeModal error={searchParams?.error} returnTo="/admin/badges" />
 
         <div className="member-badge-admin-list">
           {badges.map((badge) => (
@@ -47,7 +35,7 @@ export default async function AdminBadgesPage({
               {badge.imageUrl ? (
                 <img className="badge-admin-thumb" src={badge.imageUrl} alt="" />
               ) : (
-                <span>{badge.emoji}</span>
+                <span className="badge-admin-thumb badge-image-fallback">Badge</span>
               )}
               <div>
                 <strong>{badge.name}</strong>

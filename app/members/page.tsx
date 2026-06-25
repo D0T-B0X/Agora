@@ -55,8 +55,12 @@ export default async function MembersPage() {
                           <img src={memberBadge.badge.imageUrl} alt={memberBadge.badge.name} />
                         </a>
                       ) : (
-                        <a href={`/badges/${memberBadge.badgeId}`} key={memberBadge.id}>
-                          {memberBadge.badge.emoji}
+                        <a
+                          className="badge-image-fallback"
+                          href={`/badges/${memberBadge.badgeId}`}
+                          key={memberBadge.id}
+                        >
+                          Badge
                         </a>
                       ),
                     )}

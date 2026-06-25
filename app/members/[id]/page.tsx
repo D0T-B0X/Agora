@@ -3,6 +3,7 @@
 import { Role, UserStatus } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { auth } from "../../../auth";
+import CreateBadgeModal from "../../create-badge-modal";
 import { memberDisplayName, memberInitials } from "../../../lib/members";
 import { prisma } from "../../../lib/prisma";
 import { assignBadge, removeMemberBadge } from "../../(protected)/admin/badges/actions";
@@ -13,7 +14,10 @@ function leetcodeUrl(handle: string) {
   return `https://leetcode.com/u/${encodeURIComponent(handle)}`;
 }
 
-export default async function MemberProfilePage({ params }: Readonly<{ params: { id: string } }>) {
+export default async function MemberProfilePage({
+  params,
+  searchParams,
+}: Readonly<{ params: { id: string }; searchParams?: { error?: string } }>) {
   const session = await auth();
   const member = await prisma.user.findFirst({
     where: { id: params.id, status: UserStatus.ACTIVE },
@@ -118,9 +122,15 @@ export default async function MemberProfilePage({ params }: Readonly<{ params: {
             <p className="section-label">Badges</p>
             <h2>Recognition</h2>
             {isAdmin ? (
-              <a className="text-link" href="/admin/badges">
-                Manage badge types
-              </a>
+              <div className="member-badge-admin-actions">
+                <a className="text-link" href="/admin/badges">
+                  Manage badge groups
+                </a>
+                <a className="secondary-button" href="#create-badge">
+                  + Create Badge
+                </a>
+                <CreateBadgeModal error={searchParams?.error} returnTo={`/members/${member.id}`} />
+              </div>
             ) : null}
             {member.memberBadges.length ? (
               <div className="member-badge-list">
@@ -134,7 +144,7 @@ export default async function MemberProfilePage({ params }: Readonly<{ params: {
                           alt=""
                         />
                       ) : (
-                        <span>{memberBadge.badge.emoji}</span>
+                        <span className="member-badge-image badge-image-fallback">Badge</span>
                       )}
                       <strong>{memberBadge.badge.name}</strong>
                     </a>
@@ -165,7 +175,7 @@ export default async function MemberProfilePage({ params }: Readonly<{ params: {
                 <select id="badgeId" name="badgeId" required>
                   {availableBadges.map((badge) => (
                     <option key={badge.id} value={badge.id}>
-                      {badge.emoji} {badge.name}
+                      {badge.name}
                     </option>
                   ))}
                 </select>

@@ -1281,11 +1281,26 @@ img {
 
 .member-badge-image,
 .badge-admin-thumb {
+  display: inline-grid;
+  place-items: center;
   width: 48px;
   height: 48px;
   border: 1px solid var(--line);
   border-radius: 999px;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
   object-fit: cover;
+}
+
+.member-badge-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
 }
 
 .member-badge form,
@@ -1355,9 +1370,90 @@ img {
   border-radius: 40px;
   background: var(--accent);
   color: var(--ink);
-  font-size: 5rem;
+  font-size: 1.1rem;
   font-weight: 900;
+  text-transform: uppercase;
   object-fit: cover;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  place-items: center;
+  padding: 20px;
+  background: rgb(23 26 23 / 55%);
+}
+
+.modal-backdrop:target {
+  display: grid;
+}
+
+.badge-create-modal {
+  position: relative;
+  width: min(100%, 430px);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  padding: 24px;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 28%);
+}
+
+.badge-create-modal h2 {
+  margin: 0 0 20px;
+  font-size: 1.55rem;
+  letter-spacing: -0.04em;
+}
+
+.modal-close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  color: var(--ink);
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.badge-upload-row {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: #f4f4f1;
+}
+
+.badge-upload-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 999px;
+  background: #e7e7e2;
+  color: var(--ink);
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.badge-upload-row input {
+  grid-column: 1 / -1;
+}
+
+.badge-upload-row strong,
+.badge-upload-row small,
+.badge-create-modal small {
+  display: block;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  align-items: center;
+  margin-top: 10px;
 }
 
 .badge-group-members {
