@@ -34,47 +34,61 @@ async function uploadBadgeImage(badgeId: string, file: File) {
   return blob.url;
 }
 
+function safeReturnPath(value: FormDataEntryValue | null) {
+  const path = String(value ?? "/admin/badges");
+  return path.startsWith("/") && !path.startsWith("//") ? path : "/admin/badges";
+}
+
 export async function createBadge(formData: FormData) {
   await requireAdmin();
+  const returnTo = safeReturnPath(formData.get("returnTo"));
+  const image = formData.get("image");
 
   const parsed = badgeSchema.safeParse({
     name: formData.get("name"),
-    emoji: formData.get("emoji"),
     description: formData.get("description"),
   });
 
   if (!parsed.success) {
-    redirect("/admin/badges?error=invalid");
+    redirect(`${returnTo}?error=invalid#create-badge`);
+  }
+
+  if (!(image instanceof File) || image.size === 0) {
+    redirect(`${returnTo}?error=image#create-badge`);
+  }
+
+  const imageError = validateProfilePhoto(image);
+
+  if (imageError) {
+    redirect(`${returnTo}?error=image#create-badge`);
+  }
+
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    redirect(`${returnTo}?error=storage#create-badge`);
   }
 
   const badge = await prisma.badge.upsert({
     where: { name: parsed.data.name },
     update: {
-      emoji: parsed.data.emoji,
       description: parsed.data.description || null,
     },
     create: {
       name: parsed.data.name,
-      emoji: parsed.data.emoji,
       description: parsed.data.description || null,
     },
   });
 
-  const image = formData.get("image");
+  const imageUrl = await uploadBadgeImage(badge.id, image);
 
-  if (image instanceof File && image.size > 0) {
-    const imageUrl = await uploadBadgeImage(badge.id, image);
-
-    if (badge.imageUrl) {
-      await del(badge.imageUrl).catch(() => undefined);
-    }
-
-    await prisma.badge.update({ where: { id: badge.id }, data: { imageUrl } });
+  if (badge.imageUrl) {
+    await del(badge.imageUrl).catch(() => undefined);
   }
+
+  await prisma.badge.update({ where: { id: badge.id }, data: { imageUrl } });
 
   revalidatePath("/members");
   revalidatePath("/admin/badges");
-  redirect("/admin/badges");
+  redirect(`/admin/badges/${badge.id}`);
 }
 
 export async function deleteBadge(formData: FormData) {
@@ -124,7 +138,6 @@ export async function updateBadge(formData: FormData) {
 
   const parsed = badgeSchema.safeParse({
     name: formData.get("name"),
-    emoji: formData.get("emoji"),
     description: formData.get("description"),
   });
 
@@ -153,7 +166,6 @@ export async function updateBadge(formData: FormData) {
     where: { id: badgeId },
     data: {
       name: parsed.data.name,
-      emoji: parsed.data.emoji,
       description: parsed.data.description || null,
       imageUrl,
     },

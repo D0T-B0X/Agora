@@ -59,11 +59,8 @@ export default async function AdminBadgeGroupPage({
             {badge.imageUrl ? (
               <img className="badge-group-image" src={badge.imageUrl} alt="" />
             ) : (
-              <span className="badge-group-image badge-image-fallback">{badge.emoji}</span>
+              <span className="badge-group-image badge-image-fallback">Badge</span>
             )}
-
-            <label htmlFor="emoji">Emoji fallback</label>
-            <input id="emoji" name="emoji" defaultValue={badge.emoji} required />
 
             <label htmlFor="name">Badge name</label>
             <input id="name" name="name" defaultValue={badge.name} required />
