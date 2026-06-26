@@ -78,10 +78,6 @@ export function SubmissionPanel({
     localStorage.setItem(draftKey(problemSlug, language), value);
   }
 
-  function handleLanguageChange(nextLanguage: string) {
-    setLanguage(nextLanguage);
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -117,7 +113,7 @@ export function SubmissionPanel({
             name="language"
             value={language}
             disabled={isRunning}
-            onChange={(event) => handleLanguageChange(event.target.value)}
+            onChange={(event) => setLanguage(event.target.value)}
           >
             {languageOptions.map((language) => (
               <option key={language.value} value={language.value}>
@@ -144,7 +140,7 @@ export function SubmissionPanel({
             editable={!isRunning}
             extensions={languageExtensions(language)}
             height="360px"
-            onChange={(value) => handleCodeChange(value)}
+            onChange={handleCodeChange}
             theme={oneDark}
             value={code}
           />
