@@ -43,7 +43,7 @@ export default function CreateBadgeModal({
               <strong>Badge photo</strong>
               <small>Maximum 2MB</small>
             </div>
-            <CompressingImageInput id="badge-image" name="image" />
+            <CompressingImageInput id="badge-image" name="image" required />
           </div>
           <small>The photo should be square. Large images are compressed automatically.</small>
 

@@ -2,6 +2,7 @@
 
 import { UserStatus } from "@prisma/client";
 import { notFound } from "next/navigation";
+import CompressingImageInput from "../../../../compressing-image-input";
 import { requireAdmin } from "../../../../../lib/guards";
 import { memberDisplayName, memberInitials } from "../../../../../lib/members";
 import { prisma } from "../../../../../lib/prisma";
@@ -9,7 +10,7 @@ import { bulkAssignBadge, removeMemberBadge, updateBadge } from "../actions";
 
 const errors: Record<string, string> = {
   invalid: "Check the badge fields and try again.",
-  image: "Upload a JPG, PNG, or WebP image under 2MB.",
+  image: "Upload a JPG, PNG, WebP, or SVG image under 2MB.",
   storage: "Badge image storage is not configured yet. Add BLOB_READ_WRITE_TOKEN.",
 };
 
@@ -77,7 +78,7 @@ export default async function AdminBadgeGroupPage({
             <input id="xp" name="xp" type="number" min={0} defaultValue={badge.xp} />
 
             <label htmlFor="image">Badge image</label>
-            <input id="image" name="image" type="file" accept="image/png,image/jpeg,image/webp" />
+            <CompressingImageInput id="image" name="image" />
 
             <button className="button" type="submit">
               Save badge group

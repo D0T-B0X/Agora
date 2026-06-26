@@ -2,6 +2,7 @@
 
 import { Role, UserStatus } from "@prisma/client";
 import { notFound, redirect } from "next/navigation";
+import CompressingImageInput from "../../../compressing-image-input";
 import { auth } from "../../../../auth";
 import { batchYears, memberDisplayName, memberInitials } from "../../../../lib/members";
 import { prisma } from "../../../../lib/prisma";
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 const errors: Record<string, string> = {
   invalid: "Check the form fields and try again.",
-  photo: "Upload a JPG, PNG, or WebP photo under 2MB.",
+  photo: "Upload a JPG, PNG, WebP, or SVG photo under 2MB.",
   storage: "Photo storage is not configured yet. Ask an admin to add BLOB_READ_WRITE_TOKEN.",
 };
 
@@ -69,7 +70,7 @@ export default async function EditMemberProfilePage({
 
         <form action={updateMemberProfile.bind(null, member.id)} className="stacked-form">
           <label htmlFor="photo">Photo</label>
-          <input id="photo" name="photo" type="file" accept="image/png,image/jpeg,image/webp" />
+          <CompressingImageInput id="photo" name="photo" />
 
           <label htmlFor="displayName">Name</label>
           <input

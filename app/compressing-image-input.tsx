@@ -64,7 +64,8 @@ async function compressImage(file: File) {
 export default function CompressingImageInput({
   id,
   name,
-}: Readonly<{ id: string; name: string }>) {
+  required = false,
+}: Readonly<{ id: string; name: string; required?: boolean }>) {
   const [message, setMessage] = useState("Large images will be compressed before upload.");
 
   async function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -105,7 +106,7 @@ export default function CompressingImageInput({
         name={name}
         type="file"
         accept="image/png,image/jpeg,image/webp,image/svg+xml"
-        required
+        required={required}
         onChange={handleChange}
       />
       <small aria-live="polite">{message}</small>
