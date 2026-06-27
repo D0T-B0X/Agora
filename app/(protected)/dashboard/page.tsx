@@ -23,9 +23,11 @@ export default async function DashboardPage() {
           resources, achievements, and future leaderboards.
         </p>
         {session.user.role === Role.ADMIN ? (
-          <a className="text-link" href="/admin/applications">
-            Review applications
-          </a>
+          <div className="member-link-list">
+            <a href="/admin/applications">Review applications</a>
+            <a href="/admin/events">Manage events</a>
+            <a href="/admin/problems">Review problems</a>
+          </div>
         ) : null}
       </section>
     </main>

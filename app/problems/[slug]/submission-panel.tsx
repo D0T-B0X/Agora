@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
-import CodeMirror from "@uiw/react-codemirror";
+import { FormEvent, useEffect, useState } from "react";
+import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -49,6 +49,24 @@ function languageExtensions(language: string) {
   return language === "cpp" ? [cpp()] : [python()];
 }
 
+// Anti-cheat: block copy/cut/paste, drag-drop, and the right-click menu in the editor.
+// Client-side deterrent only — it stops casual copy-pasting, not determined bypassing.
+function blockEvent(event: Event) {
+  event.preventDefault();
+  return true;
+}
+
+const blockClipboard = EditorView.domEventHandlers({
+  paste: blockEvent,
+  copy: blockEvent,
+  cut: blockEvent,
+  drop: blockEvent,
+  dragstart: blockEvent,
+  contextmenu: blockEvent,
+});
+
+const draftKey = (slug: string, language: string) => `shardup:draft:${slug}:${language}`;
+
 export function SubmissionPanel({
   languageOptions,
   problemSlug,
@@ -65,12 +83,15 @@ export function SubmissionPanel({
   const [error, setError] = useState<string | null>(null);
   const [runningLanguage, setRunningLanguage] = useState("python");
 
-  function handleLanguageChange(nextLanguage: string) {
-    setLanguage(nextLanguage);
+  // Restore the saved draft for this problem + language (localStorage survives refresh).
+  useEffect(() => {
+    const saved = localStorage.getItem(draftKey(problemSlug, language));
+    setCode(saved ?? starterCode[language] ?? "");
+  }, [problemSlug, language]);
 
-    if (!code.trim() || code === starterCode[language]) {
-      setCode(starterCode[nextLanguage] ?? "");
-    }
+  function handleCodeChange(value: string) {
+    setCode(value);
+    localStorage.setItem(draftKey(problemSlug, language), value);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -108,7 +129,7 @@ export function SubmissionPanel({
             name="language"
             value={language}
             disabled={isRunning}
-            onChange={(event) => handleLanguageChange(event.target.value)}
+            onChange={(event) => setLanguage(event.target.value)}
           >
             {languageOptions.map((language) => (
               <option key={language.value} value={language.value}>
@@ -133,9 +154,9 @@ export function SubmissionPanel({
               lineNumbers: true,
             }}
             editable={!isRunning}
-            extensions={languageExtensions(language)}
+            extensions={[...languageExtensions(language), blockClipboard]}
             height="360px"
-            onChange={(value) => setCode(value)}
+            onChange={handleCodeChange}
             theme={oneDark}
             value={code}
           />

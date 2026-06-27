@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireActiveUser } from "../../../lib/guards";
 import { isSupportedLanguage, runJudge } from "../../../lib/judge";
+import { syncTopPracticeBadge } from "../../../lib/practice";
 import { prisma } from "../../../lib/prisma";
 
 const DAILY_SUBMISSION_LIMIT = 50;
@@ -82,6 +83,10 @@ export async function submitSolution(formData: FormData) {
       where: { id: submission.id },
       data: result,
     });
+
+    if (result.verdict === SubmissionVerdict.ACCEPTED) {
+      await syncTopPracticeBadge();
+    }
   } catch {
     await prisma.submission.update({
       where: { id: submission.id },
