@@ -1,3 +1,5 @@
+import ThemeToggle from "./theme-toggle";
+
 export default function SiteHeader({
   children,
 }: Readonly<{
@@ -14,6 +16,7 @@ export default function SiteHeader({
         <a href="/events">Events</a>
         <a href="/problems">Practice</a>
         {children ?? <a href="/join">Join</a>}
+        <ThemeToggle />
       </nav>
     </header>
   );

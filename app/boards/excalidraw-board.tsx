@@ -10,6 +10,7 @@ import type {
 } from "@excalidraw/excalidraw/types";
 import { saveTeachingBoard } from "../(protected)/admin/teaching/actions";
 import { emptyTeachingScene, sanitizeTeachingScene, type TeachingScene } from "../../lib/teaching";
+import { useTheme } from "../use-theme";
 
 declare global {
   interface Window {
@@ -57,6 +58,7 @@ export default function ExcalidrawBoard({
     () => sanitizeTeachingScene(initialScene ?? emptyTeachingScene),
     [initialScene],
   );
+  const theme = useTheme();
   const sceneRef = useRef<TeachingScene>(sanitizedInitialScene);
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -67,13 +69,13 @@ export default function ExcalidrawBoard({
       ({
         elements: sanitizedInitialScene.elements,
         appState: {
-          viewBackgroundColor: "#fffef8",
+          viewBackgroundColor: theme === "dark" ? "#151a23" : "#fffef8",
           ...sanitizedInitialScene.appState,
         },
         scrollToContent: true,
         files: {},
       }) as ExcalidrawInitialDataState,
-    [sanitizedInitialScene],
+    [sanitizedInitialScene, theme],
   );
 
   useEffect(() => {
@@ -150,6 +152,7 @@ export default function ExcalidrawBoard({
       <div className="excalidraw-canvas-shell" data-testid="excalidraw-board">
         <Excalidraw
           initialData={initialData}
+          theme={theme}
           viewModeEnabled={!editable}
           zenModeEnabled={!editable}
           onChange={(elements, appState: AppState, files: BinaryFiles) => {
