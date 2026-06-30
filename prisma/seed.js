@@ -2,6 +2,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { PrismaClient } = require("@prisma/client");
 const { buildStressTests } = require("./hidden-stress-tests");
+const { randomUUID } = require("node:crypto");
+const { additionalPracticeProblems, practiceOrderSlugs } = require("./practice-problem-batch");
 
 const prisma = new PrismaClient();
 
@@ -22,6 +24,25 @@ function readReferenceSolutions(slug) {
 const TOP_PRACTICE_BADGE_NAME = "Practice Champion";
 
 async function main() {
+  // Active cohort with a couple of default questions so the apply flow works.
+  await prisma.cohort.upsert({
+    where: { year: 2027 },
+    update: {},
+    create: {
+      year: 2027,
+      isActive: true,
+      questions: [
+        {
+          id: randomUUID(),
+          label: "What do you want to build or improve through ShardUp?",
+          required: true,
+        },
+        { id: randomUUID(), label: "Relevant experience or projects", required: false },
+      ],
+    },
+  });
+
+  // Sample events.
   const events = [
     {
       title: "Introduction to Tensor Processing Units (TPUs)",
@@ -42,10 +63,7 @@ async function main() {
     });
 
     if (existingEvent) {
-      await prisma.event.update({
-        where: { id: existingEvent.id },
-        data: event,
-      });
+      await prisma.event.update({ where: { id: existingEvent.id }, data: event });
     } else {
       await prisma.event.create({ data: event });
     }
@@ -523,6 +541,13 @@ async function main() {
       ],
     },
   ];
+
+  problems.push(...additionalPracticeProblems);
+
+  const practiceOrderBySlug = new Map(practiceOrderSlugs.map((slug, index) => [slug, index]));
+  for (const problem of problems) {
+    problem.practiceOrder = practiceOrderBySlug.get(problem.slug) ?? 100000;
+  }
 
   // Hidden edge-case and stress tests, shared with scripts/sync-problem-tests.mjs.
   const hiddenTests = require("./hidden-tests.json");

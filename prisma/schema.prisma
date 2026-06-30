@@ -70,7 +70,22 @@ model User {
   memberBadges  MemberBadge[] @relation("MemberBadgeUser")
   awardedBadges MemberBadge[] @relation("MemberBadgeAwarder")
 
+  boards Board[]
+
   reviewedApplications Application[] @relation("ApplicationReviewer")
+}
+
+// The yearly application round. One cohort is active at a time; admins edit its
+// questions, which the apply form renders. `questions` is a JSON array of
+// { id, label, required } in display order.
+model Cohort {
+  id           String        @id @default(cuid())
+  year         Int           @unique
+  isActive     Boolean       @default(false)
+  questions    Json          @default("[]")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
 }
 
 model Account {
@@ -164,19 +179,25 @@ model MemberBadge {
 model Application {
   id         String            @id @default(cuid())
   userId     String            @unique
+  cohortId   String?
   status     ApplicationStatus @default(DRAFT)
-  whyJoin    String?
+  // Answers to the cohort's dynamic questions, keyed by question id: { [id]: value }.
+  answers    Json              @default("{}")
+  // Legacy free-text fields, kept read-only for pre-cohort applications.
   goals      String?
   experience String?
+  whyJoin    String?
   reviewedBy String?
   reviewedAt DateTime?
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
 
-  user     User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reviewer User? @relation("ApplicationReviewer", fields: [reviewedBy], references: [id])
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cohort   Cohort? @relation(fields: [cohortId], references: [id], onDelete: SetNull)
+  reviewer User?   @relation("ApplicationReviewer", fields: [reviewedBy], references: [id])
 
   @@index([status])
+  @@index([cohortId])
 }
 
 model Event {
@@ -222,6 +243,7 @@ model Problem {
   tags        String[]          @default([])
   difficulty  ProblemDifficulty @default(EASY)
   timeLimitMs Int               @default(2000)
+  practiceOrder Int             @default(100000)
   published   Boolean           @default(true)
   solutionCode     String?
   solutionLanguage String?
@@ -234,6 +256,7 @@ model Problem {
   submissions Submission[]
   referenceSolutions ProblemReferenceSolution[]
 
+  @@index([published, practiceOrder])
   @@index([published, difficulty])
   @@index([createdById])
 }
@@ -356,6 +379,21 @@ model TeachingBoard {
   session TeachingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
+}
+
+// Personal Excalidraw boards owned by members (Practice > Design). Shared by URL;
+// any active user can view, only the owner can edit. Capped per user in the create action.
+model Board {
+  id        String   @id @default(cuid())
+  ownerId   String
+  title     String
+  scene     Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
 }
 
 model TeachingArtifact {
